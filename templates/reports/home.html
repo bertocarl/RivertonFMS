@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Reports and printing</h1>
+<div class="grid gap-6 lg:grid-cols-3">
+  <form method="post" class="panel lg:col-span-1 self-start">
+    {% csrf_token %}
+    {% include "generic/_fields.html" %}
+    <button class="btn btn-primary" type="submit">Run report</button>
+    <p class="help mt-3">Big reports can take a moment. The page updates by itself when the report is ready.</p>
+  </form>
+  <div class="lg:col-span-2">
+    <h2 class="text-lg font-bold mb-2">Recent reports</h2>
+    <table class="grid">
+      <thead><tr><th>Report</th><th>Requested</th><th>By</th><th>Status</th><th></th></tr></thead>
+      <tbody>{% for r in runs %}
+        <tr><td>{{ r }}</td><td>{{ r.created_at|date:"j M H:i" }}</td><td>{{ r.requested_by|default:"—" }}</td><td>{{ r.get_status_display }}</td>
+        <td class="num"><a class="underline" href="{% url 'reports:detail' r.pk %}">Open</a></td></tr>
+      {% empty %}<tr><td colspan="5" class="py-4 text-center">No reports yet. Run one on the left.</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

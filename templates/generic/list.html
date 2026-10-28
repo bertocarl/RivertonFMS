@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-2xl font-bold">{{ title }}</h1>
+  {% if add_url %}<a class="btn btn-primary" href="{{ add_url }}">{{ add_label }}</a>{% endif %}
+</div>
+<div class="overflow-x-auto">
+<table class="grid">
+  <thead><tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}<th></th></tr></thead>
+  <tbody>
+  {% for row in rows %}
+    <tr>
+      {% for c in row.cells %}<td>{{ c }}</td>{% endfor %}
+      <td class="num">
+        {% if row.edit %}<a class="underline" href="{{ row.edit }}">Edit</a>{% endif %}
+        {% if row.open_url %}<a class="underline" href="{% url request.resolver_match.app_name|add:':detail' row.open_url %}">Open</a>{% endif %}
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="{{ headers|length|add:1 }}" class="py-6 text-center" style="color:#5B6478">Nothing here yet.{% if add_url %} Use “{{ add_label }}” to add the first one.{% endif %}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if is_paginated %}
+<div class="flex gap-3 mt-4 text-sm">
+  {% if page_obj.has_previous %}<a class="btn" href="?page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}
+  <span class="py-2">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
+  {% if page_obj.has_next %}<a class="btn" href="?page={{ page_obj.next_page_number }}">Next</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

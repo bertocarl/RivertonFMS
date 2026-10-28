@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Sign in{% endblock %}
+{% block content %}
+<div class="max-w-sm mx-auto mt-16 panel">
+  <h1 class="text-xl font-bold mb-1">RIVERTON FMS</h1>
+  <p class="text-sm mb-5" style="color:#5B6478">TotalEnergies Bonje forecourt management</p>
+  <form method="post">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<p class="err mb-3">Wrong username or password. Try again.</p>{% endif %}
+    <div class="mb-4"><label class="lbl" for="id_username">Username</label>
+      <input class="fld" name="username" id="id_username" autofocus autocomplete="username" required></div>
+    <div class="mb-5"><label class="lbl" for="id_password">Password</label>
+      <input class="fld" type="password" name="password" id="id_password" autocomplete="current-password" required></div>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button class="btn btn-primary w-full" type="submit">OK</button>
+    <p class="help mt-3">After typing your password, press Tab, then OK.</p>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Closing meters{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-1">Closing meters, shift {{ shift.code }}</h1>
+<p class="mb-4 text-sm" style="color:#5B6478">Read each pump and type the closing litres and closing electric cash. You can save part-way and come back.</p>
+<form method="post">
+  {% csrf_token %}
+  {{ formset.management_form }}
+  {% if formset.non_form_errors %}<p class="err mb-2">{{ formset.non_form_errors }}</p>{% endif %}
+  <div class="overflow-x-auto mb-4">
+  <table class="grid">
+    <thead><tr><th>Nozzle</th><th>Product</th><th class="num">Opening L</th><th>Closing litres</th><th class="num">Opening electric cash</th><th>Closing electric cash</th></tr></thead>
+    <tbody>
+    {% for form in formset %}
+      <tr>
+        {{ form.id }}
+        <td>{{ form.instance.nozzle }}</td><td>{{ form.instance.nozzle.tank.product.name }}</td>
+        <td class="num">{{ form.instance.opening_litres }}</td>
+        <td>{{ form.closing_litres }}{% for e in form.closing_litres.errors %}<p class="err">{{ e }}</p>{% endfor %}{% for e in form.non_field_errors %}<p class="err">{{ e }}</p>{% endfor %}</td>
+        <td class="num">{{ form.instance.opening_cash_meter }}</td>
+        <td>{{ form.closing_cash_meter }}{% for e in form.closing_cash_meter.errors %}<p class="err">{{ e }}</p>{% endfor %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <div class="flex flex-wrap gap-3">
+    <button class="btn btn-primary" type="submit">Save meters</button>
+    <button class="btn" type="submit" name="pull" value="1" title="Copies the latest totalizer values pushed by the pumps over IFSF">Fill from pump totalizers</button>
+    <a class="btn" href="{% url 'shifts:detail' shift.pk %}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

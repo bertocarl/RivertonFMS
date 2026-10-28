@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Verify shift{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-1">Verify shift {{ shift.code }}</h1>
+<p class="mb-4 text-sm" style="color:#5B6478">Check the figures. To enter the shift date, click any meter in the Electric cash column, then press Tab. The date box turns green when it is ready.</p>
+
+{% if s.incomplete %}
+<div class="mb-4 px-4 py-3 rounded border bg-red-50 border-red-300 text-red-900 text-sm">Closing meters are missing for {% for r in s.incomplete %}{{ r.nozzle }}{% if not forloop.last %}, {% endif %}{% endfor %}. <a class="underline" href="{% url 'shifts:readings' shift.pk %}">Enter them</a> before verifying.</div>
+{% endif %}
+{% if s.needs_acknowledgement and not s.incomplete %}
+<div class="mb-4 px-4 py-3 rounded border text-sm" style="background:#FFF4E0;border-color:#E8B05A;color:#6B3B05">
+  Shortage of {{ CURRENCY }} {{ s.shortage|floatformat:2 }}{% if s.electric_mismatch %}; electric cash differs from the meter value on {{ s.electric_mismatch|length }} nozzle(s){% endif %}. Check the entries, or accept the difference below.
+</div>
+{% endif %}
+
+<div class="overflow-x-auto mb-6">
+<table class="grid">
+  <thead><tr><th>Nozzle</th><th>Product</th><th class="num">Litres</th><th class="num">Meter value</th><th class="num">Electric cash</th></tr></thead>
+  <tbody>{% for r in s.readings %}
+    <tr><td>P{{ r.nozzle.pump.number }}-N{{ r.nozzle.number }}</td><td>{{ r.nozzle.tank.product.name }}</td>
+      <td class="num">{{ r.litres_sold|floatformat:2 }}</td><td class="num">{{ r.expected_value }}</td>
+      <td class="num ecash" tabindex="0">{{ r.electric_cash|floatformat:2 }}</td></tr>{% endfor %}</tbody>
+  <tfoot><tr><td colspan="2">Total</td><td class="num">{{ s.metered_litres|floatformat:2 }}</td><td class="num">{{ s.metered_value|floatformat:2 }}</td><td class="num">{{ s.electric_total|floatformat:2 }}</td></tr>
+  <tr><td colspan="3">Fuel sales recorded</td><td class="num" colspan="2">{{ s.recorded_fuel_value|floatformat:2 }}</td></tr></tfoot>
+</table>
+</div>
+
+<form method="post" class="panel max-w-xl" id="verify-form">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="mb-3 text-sm err">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+  <label class="lbl" for="id_business_date">Shift date</label>
+  <input type="date" class="fld" name="business_date" id="id_business_date" value="{{ date_value }}" readonly>
+  {% for e in form.business_date.errors %}<p class="err">{{ e }}</p>{% endfor %}
+  <p class="help mb-4" id="date-help">Locked. Click an Electric cash meter, then press Tab. <button type="button" id="unlock" class="underline">Unlock without a meter</button></p>
+  {% if s.needs_acknowledgement %}
+  <label class="flex items-start gap-2 mb-4 text-sm"><input type="checkbox" name="accept_variance" class="h-4 w-4 mt-0.5"> I accept the shortage or meter difference shown above</label>
+  {% endif %}
+  <div class="flex gap-3">
+    <button class="btn btn-primary" id="verify-btn" type="submit" disabled {% if s.incomplete %}data-blocked="1"{% endif %}>Verify shift</button>
+    <a class="btn" href="{% url 'shifts:detail' shift.pk %}">Cancel</a>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  var date = document.getElementById("id_business_date");
+  var btn = document.getElementById("verify-btn");
+  var help = document.getElementById("date-help");
+  function activate() {
+    date.readOnly = false;
+    date.classList.add("date-ready");
+    if (!btn.dataset.blocked) btn.disabled = false;
+    help.textContent = "Date field is ready. Check the date, then press Enter or Verify shift.";
+    date.focus();
+  }
+  document.querySelectorAll(".ecash").forEach(function (cell) {
+    cell.addEventListener("keydown", function (e) {
+      if (e.key === "Tab" && !e.shiftKey) { e.preventDefault(); activate(); }
+    });
+  });
+  document.getElementById("unlock").addEventListener("click", activate);
+})();
+</script>
+{% endblock %}

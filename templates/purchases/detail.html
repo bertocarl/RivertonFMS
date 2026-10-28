@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Delivery {{ purchase.invoice_no }}{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-2xl font-bold">{{ purchase.supplier }}, invoice {{ purchase.invoice_no }}
+    <span class="pill {% if purchase.status == 'POSTED' %}pill-open{% else %}pill-verified{% endif %}">{{ purchase.get_status_display }}</span></h1>
+  {% if purchase.status == "DRAFT" %}
+  <form method="post" action="{% url 'purchases:post' purchase.pk %}">{% csrf_token %}<button class="btn btn-ok" type="submit">Post and update stock</button></form>
+  {% endif %}
+</div>
+<p class="text-sm mb-4" style="color:#5B6478">Delivered {{ purchase.delivery_date|date:"d/m/Y" }}{% if purchase.vehicle_reg %} by {{ purchase.vehicle_reg }}{% endif %}{% if purchase.delivery_note %}. Delivery note {{ purchase.delivery_note }}{% endif %}.</p>
+<table class="grid">
+  <thead><tr><th>Product</th><th>Tank</th><th class="num">Quantity</th><th class="num">Unit cost</th><th class="num">Total</th></tr></thead>
+  <tbody>{% for l in lines %}<tr><td>{{ l.product.name }}</td><td>{{ l.tank|default_if_none:"—" }}</td><td class="num">{{ l.quantity }}</td><td class="num">{{ l.unit_cost }}</td><td class="num">{{ l.line_total }}</td></tr>{% endfor %}</tbody>
+  <tfoot><tr><td colspan="4">Total</td><td class="num">{{ purchase.total }}</td></tr></tfoot>
+</table>
+<p class="mt-4"><a class="underline" href="{% url 'purchases:list' %}">Back to deliveries</a></p>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Entry saved{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Entry saved</h1>
+<div class="panel max-w-xl mb-4">
+  <dl class="grid grid-cols-2 gap-y-2 text-sm">
+    <dt>Product</dt><dd class="font-semibold">{{ sale.product.name }}</dd>
+    <dt>Quantity</dt><dd>{{ sale.quantity }}</dd>
+    <dt>Amount</dt><dd class="font-semibold">{{ CURRENCY }} {{ sale.amount }}</dd>
+    <dt>Paid by</dt><dd>{{ sale.get_payment_method_display }}</dd>
+    {% if sale.customer %}<dt>Customer</dt><dd>{{ sale.customer.name }}</dd>{% endif %}
+    {% if sale.invoice %}<dt>Invoice</dt><dd>{{ sale.invoice.number }}</dd>{% endif %}
+    {% if sale.reference %}<dt>Reference</dt><dd>{{ sale.reference }}</dd>{% endif %}
+  </dl>
+</div>
+<a class="btn btn-primary" href="{% url 'sales:entry' %}" data-new-entry autofocus>Next (F3)</a>
+<a class="btn" href="{% url 'sales:list' %}?shift={{ sale.shift_id }}">See shift entries</a>
+{% endblock %}

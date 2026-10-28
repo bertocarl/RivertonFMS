@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: bonje
+      POSTGRES_USER: bonje
+      POSTGRES_PASSWORD: bonje
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  redis:
+    image: redis:7
+  web:
+    build: .
+    environment: &env
+      DJANGO_DEBUG: "0"
+      DJANGO_SECRET_KEY: change-me-in-production
+      DJANGO_ALLOWED_HOSTS: "*"
+      DB_NAME: bonje
+      DB_USER: bonje
+      DB_PASSWORD: bonje
+      DB_HOST: db
+      USE_CELERY: "1"
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      IFSF_API_TOKEN: change-me-ifsf-token
+    volumes:
+      - .:/app   # keeps the generated migrations on your disk so you can commit them
+    ports:
+      - "8000:8000"
+    depends_on: [db, redis]
+  worker:
+    build: .
+    command: celery -A config worker -l info
+    environment: *env
+    volumes:
+      - .:/app
+    depends_on: [db, redis, web]
+volumes:
+  pgdata:

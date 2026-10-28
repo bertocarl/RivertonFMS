@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}New sale entry{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4 max-w-2xl">
+  <h1 class="text-2xl font-bold">New sale entry</h1>
+  <a class="btn" href="{% url 'sales:entry' %}" data-new-entry title="Shortcut: F3">New entry (F3)</a>
+</div>
+{% if not shift %}
+<div class="panel max-w-2xl">
+  <p class="mb-3">No shift is open, so sales cannot be entered yet.</p>
+  {% if is_supervisor %}<form method="post" action="{% url 'shifts:open' %}">{% csrf_token %}<button class="btn btn-primary" type="submit">Open a shift</button></form>
+  {% else %}<p class="text-sm">Ask a supervisor to open a shift.</p>{% endif %}
+</div>
+{% else %}
+<form method="post" class="panel max-w-2xl">
+  {% csrf_token %}
+  <p class="text-sm mb-4" style="color:#5B6478">Recording into shift <strong>{{ shift.code }}</strong>. Fuel entries record how pump sales were paid for. Stock is deducted from the pump meters when the shift closes.</p>
+  {% include "generic/_fields.html" %}
+  <button class="btn btn-primary" type="submit">Save entry</button>
+</form>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-1">Today, {{ today|date:"l j F Y" }}</h1>
+<p class="mb-6" style="color:#5B6478">Sales recorded so far today across all shifts.</p>
+
+<div class="grid gap-4 md:grid-cols-5 mb-8">
+  <div class="panel md:col-span-2">
+    <div class="text-sm font-semibold">Total sales</div>
+    <div class="text-4xl font-bold mt-1">{{ CURRENCY }} {{ total_today|floatformat:2 }}</div>
+  </div>
+  <div class="panel"><div class="text-sm">Cash</div><div class="text-xl font-semibold">{{ by_method.CASH|default:0|floatformat:2 }}</div></div>
+  <div class="panel"><div class="text-sm">M-Pesa</div><div class="text-xl font-semibold">{{ by_method.MPESA|default:0|floatformat:2 }}</div></div>
+  <div class="panel"><div class="text-sm">Card</div><div class="text-xl font-semibold">{{ by_method.CARD|default:0|floatformat:2 }}</div></div>
+</div>
+<p class="text-sm mb-6">Credit sales today: <strong>{{ by_method.CREDIT|default:0|floatformat:2 }}</strong></p>
+
+<div class="grid gap-6 lg:grid-cols-2">
+  <section>
+    <h2 class="text-lg font-bold mb-2">Tanks</h2>
+    <div class="panel space-y-4">
+      {% for t in tanks %}
+      <div>
+        <div class="flex justify-between text-sm"><span class="font-semibold">{{ t.name }}, {{ t.product.name }}</span>
+          <span>{{ t.current_level|floatformat:0 }} of {{ t.capacity|floatformat:0 }} L{% if t.is_low %} <span class="pill" style="background:#FBD5DA;color:#8A0019">Low</span>{% endif %}</span></div>
+        <div class="h-3 rounded bg-slate-200 mt-1"><div class="h-3 rounded" style="width:{{ t.percent_full|default:0 }}%;background:{% if t.is_low %}var(--red){% else %}var(--green){% endif %}"></div></div>
+      </div>
+      {% empty %}<p class="text-sm">No tanks yet.</p>{% endfor %}
+    </div>
+  </section>
+  <section>
+    <h2 class="text-lg font-bold mb-2">Fuel sold today</h2>
+    <table class="grid">
+      <thead><tr><th>Product</th><th class="num">Litres</th><th class="num">{{ CURRENCY }}</th></tr></thead>
+      <tbody>{% for f in fuel_today %}<tr><td>{{ f.product__name }}</td><td class="num">{{ f.litres|floatformat:2 }}</td><td class="num">{{ f.value|floatformat:2 }}</td></tr>
+      {% empty %}<tr><td colspan="3" class="py-4 text-center">No fuel sales entered yet today.</td></tr>{% endfor %}</tbody>
+    </table>
+    <h2 class="text-lg font-bold mt-6 mb-2">Money and stock to watch</h2>
+    <div class="panel text-sm space-y-2">
+      <p>Credit customers owe <strong>{{ CURRENCY }} {{ receivables|floatformat:2 }}</strong>.</p>
+      {% for p in low_items %}<p>Reorder <strong>{{ p.name }}</strong>: {{ p.stock_qty }} left.</p>{% empty %}<p>No shop items are below their reorder level.</p>{% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

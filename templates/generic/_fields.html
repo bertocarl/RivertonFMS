@@ -1,0 +1,9 @@
+{% if form.non_field_errors %}<div class="mb-4 px-4 py-3 rounded border bg-red-50 border-red-300 text-red-900 text-sm">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+{% for field in form %}
+<div class="mb-4">
+  <label class="lbl" for="{{ field.id_for_label }}">{{ field.label }}</label>
+  {% if field.name == "unit_price" %}<div id="price-wrap">{{ field }}</div>{% else %}{{ field }}{% endif %}
+  {% if field.help_text %}<p class="help">{{ field.help_text }}</p>{% endif %}
+  {% for e in field.errors %}<p class="err">{{ e }}</p>{% endfor %}
+</div>
+{% endfor %}

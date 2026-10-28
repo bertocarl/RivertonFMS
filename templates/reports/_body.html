@@ -1,0 +1,38 @@
+<div id="report-body"{% if not run.is_finished %} hx-get="{% url 'reports:body' run.pk %}" hx-trigger="every 2s" hx-swap="outerHTML"{% endif %}>
+{% if run.status == "FAILED" %}
+  <div class="px-4 py-3 rounded border bg-red-50 border-red-300 text-red-900 text-sm">The report could not be built. {{ run.error }}</div>
+{% elif not run.is_finished %}
+  <div class="panel text-sm">Building the report. This page checks again every two seconds.</div>
+{% elif page %}
+  <p class="text-sm mb-3" style="color:#5B6478">{{ run.result.subtitle }}</p>
+  <div class="mb-2 flex items-center justify-between text-sm">
+    <h2 class="text-lg font-bold">{{ page.title }}{% if page.part %} <span class="font-normal">({{ page.part }})</span>{% endif %}</h2>
+    <span>Page {{ number }} of {{ total }}</span>
+  </div>
+  <div class="overflow-x-auto">
+  <table class="grid">
+    <thead><tr>{% for c in page.columns %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+    <tbody>{% for row in page.rows %}<tr>{% for cell in row %}<td{% if forloop.counter > 3 and forloop.counter <= 20 %} class="num"{% endif %}>{{ cell }}</td>{% endfor %}</tr>
+      {% empty %}<tr><td colspan="{{ page.columns|length }}" class="py-4 text-center">No data for this date.</td></tr>{% endfor %}</tbody>
+    {% if page.totals %}<tfoot><tr>{% for cell in page.totals %}<td{% if forloop.counter > 3 %} class="num"{% endif %}>{{ cell }}</td>{% endfor %}</tr></tfoot>{% endif %}
+  </table>
+  </div>
+  {% if page.note %}<p class="text-sm mt-2" style="color:#5B6478">{{ page.note }}</p>{% endif %}
+
+  <div class="flex gap-2 mt-4 noprint">
+    {% if prev_page %}<a class="btn" href="?page={{ prev_page }}">Previous page</a>{% endif %}
+    {% if next_page %}<a class="btn" href="?page={{ next_page }}">Next page</a>{% endif %}
+  </div>
+
+  <form method="get" action="{% url 'reports:pdf' run.pk %}" target="_blank" class="mt-6 panel flex flex-wrap items-end gap-4 noprint">
+    <div><label class="lbl" for="start">Start Page</label><input class="fld" style="width:6rem" type="number" id="start" name="start" min="1" max="{{ total }}" value="1"></div>
+    <div><label class="lbl" for="end">End Page</label><input class="fld" style="width:6rem" type="number" id="end" name="end" min="1" max="{{ total }}" value="{{ total }}"></div>
+    <div><label class="lbl" for="copies">Copies</label><input class="fld" style="width:6rem" type="number" id="copies" name="copies" min="1" max="20" value="1"></div>
+    <button class="btn btn-primary" type="submit">Print pages</button>
+    <span class="text-sm pb-2">Last page: {{ total }}</span>
+    <p class="help w-full">To print pages 4 to 10, set Start Page to 4 and End Page to 10. A PDF opens in a new tab for printing.</p>
+  </form>
+{% else %}
+  <div class="panel text-sm">This report has no pages.</div>
+{% endif %}
+</div>

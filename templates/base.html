@@ -1,0 +1,122 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}FMS{% endblock %} | TotalEnergies Bonje</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <style>
+    :root { --ink:#16203A; --paper:#EEF1F6; --red:#E4002B; --green:#0F7B5F; --amber:#B45309; --line:#CDD3DF; }
+    body { font-family:"IBM Plex Sans", system-ui, sans-serif; background:var(--paper); color:var(--ink); font-variant-numeric:tabular-nums; }
+    .fld { width:100%; border:1px solid var(--line); border-radius:4px; padding:.5rem .65rem; background:#fff; font-size:.95rem; }
+    .fld:focus { outline:3px solid #9DB4FF; border-color:#4A63C9; }
+    .lbl { display:block; font-weight:600; font-size:.875rem; margin-bottom:.25rem; }
+    .help { font-size:.8rem; color:#5B6478; margin-top:.2rem; }
+    .err { font-size:.85rem; color:#B00020; margin-top:.2rem; }
+    .btn { display:inline-block; border-radius:4px; padding:.5rem 1rem; font-weight:600; font-size:.9rem; border:1px solid var(--ink); background:#fff; color:var(--ink); cursor:pointer; }
+    .btn:hover { background:#E3E8F2; }
+    .btn-primary { background:var(--red); border-color:var(--red); color:#fff; }
+    .btn-primary:hover { background:#BF0024; }
+    .btn-ok { background:var(--green); border-color:var(--green); color:#fff; }
+    .btn-ok:hover { background:#0B5F49; }
+    .btn[disabled] { opacity:.45; cursor:not-allowed; }
+    table.grid { width:100%; border-collapse:collapse; background:#fff; font-size:.9rem; }
+    table.grid th { background:var(--ink); color:#fff; text-align:left; padding:.5rem .6rem; font-weight:600; white-space:nowrap; }
+    table.grid td { padding:.45rem .6rem; border-bottom:1px solid #E3E7EF; }
+    table.grid tbody tr:hover { background:#F6F8FC; }
+    table.grid tfoot td { font-weight:700; border-top:2px solid var(--ink); }
+    .num { text-align:right; }
+    .pill { display:inline-block; padding:.1rem .6rem; border-radius:999px; font-size:.8rem; font-weight:600; }
+    .pill-open { background:#DDF3EA; color:#0B5F49; } .pill-verified { background:#FDEBC8; color:#8A4B08; } .pill-closed { background:#E3E7EF; color:#3B4560; }
+    .panel { background:#fff; border:1px solid var(--line); border-radius:6px; padding:1rem 1.25rem; }
+    .nav a { display:block; padding:.4rem 1rem; color:#D6DCEB; font-size:.92rem; }
+    .nav a:hover { background:#24305A; color:#fff; }
+    .nav .grp { padding:.9rem 1rem .25rem; color:#8E9AB8; font-size:.8rem; font-weight:600; }
+    .ecash:focus { outline:3px solid var(--green); background:#DDF3EA; }
+    .date-ready { background:#B7EBCF !important; border-color:var(--green) !important; }
+    @media print { aside, header, .noprint { display:none !important; } }
+  </style>
+</head>
+<body class="min-h-screen md:flex">
+{% if user.is_authenticated %}
+<aside class="nav md:w-60 md:min-h-screen shrink-0 noprint" style="background:var(--ink)">
+  <div class="px-4 py-4 border-b border-white/10">
+    <div class="text-white font-bold text-lg leading-tight">FMS</div>
+    <div class="text-sm" style="color:#8E9AB8">{{ station.name|default:"TotalEnergies Bonje" }}</div>
+  </div>
+  <details class="md:!block" open>
+    <summary class="md:hidden px-4 py-2 text-white cursor-pointer">Menu</summary>
+    <a href="{% url 'forecourt:dashboard' %}">Dashboard</a>
+    <div class="grp">Daily work</div>
+    <a href="{% url 'shifts:list' %}">Shifts</a>
+    <a href="{% url 'sales:entry' %}">New sale entry</a>
+    <a href="{% url 'sales:list' %}">Sales entries</a>
+    {% if can_report %}
+    <div class="grp">Stock and buying</div>
+    <a href="{% url 'purchases:list' %}">Deliveries</a>
+    <a href="{% url 'purchases:suppliers' %}">Suppliers</a>
+    <a href="{% url 'forecourt:tanks' %}">Tanks</a>
+    <div class="grp">Customers</div>
+    <a href="{% url 'sales:customers' %}">Credit customers</a>
+    <a href="{% url 'sales:invoices' %}">Invoices</a>
+    {% endif %}
+    {% if is_finance %}
+    <a href="{% url 'sales:payment_add' %}">Receive payment</a>
+    <div class="grp">Accounts</div>
+    <a href="{% url 'purchases:payment_add' %}">Pay supplier</a>
+    <a href="{% url 'ledger:expenses' %}">Expenses</a>
+    <a href="{% url 'ledger:journal' %}">Journal</a>
+    <a href="{% url 'ledger:accounts' %}">Chart of accounts</a>
+    {% endif %}
+    {% if can_report %}
+    <div class="grp">Reports</div>
+    <a href="{% url 'reports:home' %}">Reports and printing</a>
+    <div class="grp">Setup</div>
+    <a href="{% url 'forecourt:products' %}">Products and prices</a>
+    <a href="{% url 'forecourt:pumps' %}">Pumps and IFSF nodes</a>
+    <a href="{% url 'forecourt:nozzles' %}">Nozzles</a>
+    {% endif %}
+    {% if user.is_staff %}<a href="{% url 'admin:index' %}">Admin site</a>{% endif %}
+  </details>
+</aside>
+{% endif %}
+<div class="flex-1 min-w-0">
+  {% if user.is_authenticated %}
+  <header class="flex items-center justify-between gap-3 px-6 py-3 bg-white border-b noprint" style="border-color:var(--line)">
+    <div class="text-sm">
+      {% if open_shift %}Shift <a class="font-semibold underline" href="{% url 'shifts:detail' open_shift.pk %}">{{ open_shift.code }}</a>
+        <span class="pill pill-{{ open_shift.status|lower }}">{{ open_shift.get_status_display }}</span>
+      {% else %}No shift open{% endif %}
+    </div>
+    <form method="post" action="{% url 'logout' %}" class="flex items-center gap-3 text-sm">
+      {% csrf_token %}<span>{{ user.get_full_name|default:user.username }} ({{ user.get_role_display }})</span>
+      <button class="btn" type="submit">Sign out</button>
+    </form>
+  </header>
+  {% endif %}
+  <main class="p-6 max-w-7xl">
+    {% for m in messages %}
+    <div class="mb-4 px-4 py-3 rounded border text-sm {% if m.level_tag == 'error' %}bg-red-50 border-red-300 text-red-900{% else %}bg-green-50 border-green-300 text-green-900{% endif %}" role="status">{{ m }}</div>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+<script>
+  // F3 starts the next entry wherever a page offers one.
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "F3") {
+      var next = document.querySelector("[data-new-entry]");
+      if (next) { e.preventDefault(); next.click(); }
+    }
+  });
+  document.body.addEventListener("htmx:configRequest", function (e) {
+    var t = document.querySelector("input[name=csrfmiddlewaretoken]");
+    if (t) e.detail.headers["X-CSRFToken"] = t.value;
+  });
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

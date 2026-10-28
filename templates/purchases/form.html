@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Record delivery{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Record delivery</h1>
+<form method="post">
+  {% csrf_token %}
+  <div class="panel max-w-xl mb-6">{% include "generic/_fields.html" %}</div>
+  <h2 class="text-lg font-bold mb-2">Products received</h2>
+  {{ formset.management_form }}
+  {% if formset.non_form_errors %}<p class="err">{{ formset.non_form_errors }}</p>{% endif %}
+  <div class="overflow-x-auto mb-4">
+  <table class="grid">
+    <thead><tr><th>Product</th><th>Tank (fuel only)</th><th>Quantity</th><th>Unit cost</th></tr></thead>
+    <tbody>{% for f in formset %}
+      <tr>{{ f.id }}
+        <td>{{ f.product }}{% for e in f.product.errors %}<p class="err">{{ e }}</p>{% endfor %}</td>
+        <td>{{ f.tank }}{% for e in f.tank.errors %}<p class="err">{{ e }}</p>{% endfor %}</td>
+        <td>{{ f.quantity }}{% for e in f.quantity.errors %}<p class="err">{{ e }}</p>{% endfor %}</td>
+        <td>{{ f.unit_cost }}{% for e in f.unit_cost.errors %}<p class="err">{{ e }}</p>{% endfor %}</td>
+      </tr>{% endfor %}</tbody>
+  </table>
+  </div>
+  <button class="btn btn-primary" type="submit">Save draft</button>
+  <a class="btn" href="{% url 'purchases:list' %}">Cancel</a>
+</form>
+{% endblock %}

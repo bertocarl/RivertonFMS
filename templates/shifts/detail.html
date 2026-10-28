@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Shift {{ shift.code }}{% endblock %}
+{% block content %}
+<div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+  <div>
+    <h1 class="text-2xl font-bold">Shift {{ shift.code }} <span class="pill pill-{{ shift.status|lower }}">{{ shift.get_status_display }}</span></h1>
+    <p class="text-sm" style="color:#5B6478">Opened {{ shift.opened_at|date:"j M Y H:i" }} by {{ shift.opened_by }}{% if shift.business_date %}. Shift date {{ shift.business_date|date:"d/m/Y" }}{% endif %}.</p>
+  </div>
+  <div class="flex flex-wrap gap-2 noprint">
+    {% if shift.status == "OPEN" %}
+      <a class="btn" href="{% url 'sales:entry' %}">Add sale</a>
+      <a class="btn" href="{% url 'shifts:readings' shift.pk %}">Enter closing meters</a>
+      <a class="btn" href="{% url 'shifts:dips' shift.pk 'open' %}">Opening dips</a>
+      <a class="btn" href="{% url 'shifts:dips' shift.pk 'close' %}">Closing dips</a>
+      {% if is_supervisor %}<a class="btn btn-primary" href="{% url 'shifts:verify' shift.pk %}">Verify shift</a>{% endif %}
+    {% elif shift.status == "VERIFIED" and is_supervisor %}
+      <a class="btn {% if not shift.backed_up_at %}btn-primary{% endif %}" href="{% url 'shifts:backup' shift.pk %}">Back up shift data</a>
+      <form method="post" action="{% url 'shifts:close' shift.pk %}">{% csrf_token %}
+        <button class="btn btn-ok" type="submit" {% if not shift.backed_up_at %}disabled title="Back up the shift first"{% endif %}>Close shift</button></form>
+      <form method="post" action="{% url 'shifts:reopen' shift.pk %}">{% csrf_token %}<button class="btn" type="submit">Reopen for corrections</button></form>
+    {% endif %}
+  </div>
+</div>
+
+{% if shift.status == "VERIFIED" %}
+<div class="panel mb-4 text-sm">
+  Verified by {{ shift.verified_by }} on {{ shift.verified_at|date:"j M H:i" }}.
+  {% if shift.backed_up_at %}Backed up {{ shift.backed_up_at|date:"j M H:i" }}. You can close the shift.{% else %}<strong>Next step:</strong> back up the shift data, then close the shift.{% endif %}
+</div>
+{% endif %}
+
+<div class="grid gap-4 md:grid-cols-4 mb-6">
+  <div class="panel"><div class="text-sm">Litres by meter</div><div class="text-2xl font-bold">{{ s.metered_litres|floatformat:2 }}</div></div>
+  <div class="panel"><div class="text-sm">Value by meter ({{ CURRENCY }})</div><div class="text-2xl font-bold">{{ s.metered_value|floatformat:2 }}</div></div>
+  <div class="panel"><div class="text-sm">Fuel sales recorded</div><div class="text-2xl font-bold">{{ s.recorded_fuel_value|floatformat:2 }}</div></div>
+  <div class="panel" style="{% if s.needs_acknowledgement %}border-color:var(--red){% endif %}"><div class="text-sm">Shortage</div><div class="text-2xl font-bold">{{ s.shortage|floatformat:2 }}</div></div>
+</div>
+
+<h2 class="text-lg font-bold mb-2">Pump meters</h2>
+<div class="overflow-x-auto mb-6">
+<table class="grid">
+  <thead><tr><th>Nozzle</th><th>Product</th><th class="num">Opening L</th><th class="num">Closing L</th><th class="num">Litres</th><th class="num">Price</th><th class="num">Value</th><th class="num">Electric cash</th></tr></thead>
+  <tbody>{% for r in s.readings %}
+    <tr><td>P{{ r.nozzle.pump.number }}-N{{ r.nozzle.number }}</td><td>{{ r.nozzle.tank.product.name }}</td>
+      <td class="num">{{ r.opening_litres }}</td><td class="num">{{ r.closing_litres|default_if_none:"—" }}</td>
+      <td class="num">{{ r.litres_sold|floatformat:2 }}</td><td class="num">{{ r.unit_price }}</td>
+      <td class="num">{{ r.expected_value }}</td><td class="num">{{ r.electric_cash|floatformat:2 }}</td></tr>
+  {% empty %}<tr><td colspan="8" class="py-4 text-center">No nozzles were set up when this shift opened.</td></tr>{% endfor %}</tbody>
+</table>
+</div>
+
+<h2 class="text-lg font-bold mb-2">Sales by payment method</h2>
+<div class="panel text-sm flex flex-wrap gap-x-8 gap-y-1">
+  <span>Cash <strong>{{ s.by_method.CASH|default:0|floatformat:2 }}</strong></span>
+  <span>M-Pesa <strong>{{ s.by_method.MPESA|default:0|floatformat:2 }}</strong></span>
+  <span>Card <strong>{{ s.by_method.CARD|default:0|floatformat:2 }}</strong></span>
+  <span>Credit <strong>{{ s.by_method.CREDIT|default:0|floatformat:2 }}</strong></span>
+  <span>Total <strong>{{ s.total_sales|floatformat:2 }}</strong></span>
+  <a class="underline" href="{% url 'sales:list' %}?shift={{ shift.pk }}">See every entry</a>
+</div>
+{% endblock %}
