@@ -3,7 +3,29 @@ from django.db import models
 
 from .pagination import paginate
 
+class Invoice(models.Model):
+    # Existing fields
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # --- eTIMS Specific Fields ---
+    etims_receipt_number = models.CharField(max_length=100, blank=True, null=True, unique=True)
+    etims_signature = models.TextField(blank=True, null=True)
+    etims_internal_data = models.TextField(blank=True, null=True)
+    etims_status = models.CharField(
+        max_length=20,
+        choices=[
+            ("PENDING", "Pending"),
+            ("TRANSMITTED", "Transmitted Successfully"),
+            ("FAILED", "Failed"),
+        ],
+        default="PENDING",
+    )
+    etims_error_log = models.TextField(blank=True, null=True)
 
+    def __str__(self):
+        return f"Invoice #{self.id}"
+    
 class ReportRun(models.Model):
     class Kind(models.TextChoices):
         DSSR = "DSSR", "Daily station sales report (DSSR)"

@@ -11,6 +11,128 @@ from .models import ReportRun
 from .pdf import render_pdf
 from .tasks import build_report
 
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, render
+from django.template.loader import get_template
+from django.urls import reverse
+from django.views.generic import CreateView, ListView, UpdateView
+from xhtml2pdf import pisa
+
+from .models import Invoice
+from .utils import fmt, generate_etims_qr_code
+
+FINANCE = ("accountant", "manager")
+
+class RoleMixin(LoginRequiredMixin, UserPassesTestMixin):
+    roles = None
+    def test_func(self):
+        user = self.request.user
+        return self.roles is None or user.has_role(*self.roles)
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            raise PermissionDenied
+        return super().handle_no_permission()
+
+def render_cell(obj, spec):
+    if callable(spec):
+        value = spec(obj)
+    else:
+        value = obj
+        for part in spec.split("__"):
+            value = getattr(value, part, None)
+            if callable(value):
+                value = value()
+            if value is None:
+                break
+    return fmt(value)
+
+class TableListView(RoleMixin, ListView):
+    template_name = "generic/list.html"
+    title = ""
+    columns = []
+    add_url = None
+    add_label = "Add"
+    edit_url = None
+    paginate_by = 50
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["title"] = self.title
+        ctx["headers"] = [c[0] for c in self.columns]
+        ctx["add_url"] = reverse(self.add_url) if self.add_url else None
+        ctx["add_label"] = self.add_label
+        ctx["rows"] = [
+            {
+                "cells": [render_cell(obj, c[1]) for c in self.columns],
+                "edit": reverse(self.edit_url, args=[obj.pk]) if self.edit_url else None,
+            }
+            for obj in ctx["object_list"]
+        ]
+        return ctx
+
+class InvoiceListView(TableListView):
+    roles = FINANCE
+    title = "Invoices & eTIMS Management"
+    model = Invoice
+    
+    columns = [
+        ("Invoice ID", "id"),
+        ("Total Amount", "total_amount"),
+        ("eTIMS Status", "etims_status"),
+        ("Receipt No", "etims_receipt_number"),
+        ("Actions", lambda obj: (
+            f'<a href="{reverse("reports:download-invoice-pdf", args=[obj.pk])}" class="btn-pdf-download" target="_blank">📄 Download PDF</a>'
+            if obj.etims_status == "TRANSMITTED" else
+            f'<div class="etims-poll-wrapper" data-id="{obj.id}" data-url="{reverse("reports:invoice-status-json", args=[obj.pk])}">'
+            f'<span class="status-pending">⏳ System Transmitting...</span></div>'
+        )),
+    ]
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.has_role(*FINANCE), redirect_field_name=None)
+def download_invoice_pdf(request, invoice_id):
+    invoice = get_object_or_404(Invoice, id=invoice_id)
+    qr_code_base64 = ""
+    if invoice.etims_status == "TRANSMITTED":
+        qr_code_base64 = generate_etims_qr_code(
+            invoice_number=str(invoice.id),
+            receipt_number=invoice.etims_receipt_number,
+            signature=invoice.etims_signature,
+            internal_data=invoice.etims_internal_data
+        )
+
+    context = {
+        'invoice': invoice,
+        'qr_code_base64': qr_code_base64,
+        'kra_pin': settings.KRA_TAXPAYER_PIN,
+        'kra_branch': settings.KRA_BRANCH_CODE,
+    }
+
+    template = get_template('invoices/invoice_pdf.html')
+    html_content = template.render(context)
+    
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'filename="invoice_{invoice.id}.pdf"'
+
+    pisa_status = pisa.CreatePDF(html_content, dest=response)
+    if pisa_status.err:
+        return HttpResponse('An error occurred during eTIMS PDF processing.', status=500)
+    return response
+
+@login_required
+def invoice_status_json(request, invoice_id):
+    invoice = get_object_or_404(Invoice, id=invoice_id)
+    return JsonResponse({
+        "status": invoice.etims_status,
+        "download_url": reverse("reports:download-invoice-pdf", args=[invoice.id]) if invoice.etims_status == "TRANSMITTED" else None,
+        "error": invoice.etims_error_log if invoice.etims_status == "FAILED" else ""
+    })
+
 REPORT_ROLES = SUPERVISORS + ("accountant",)
 
 

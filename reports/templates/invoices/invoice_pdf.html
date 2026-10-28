@@ -1,0 +1,27 @@
+<!-- Native xhtml2pdf layout table for KRA compliance footer -->
+<table style="width: 100%; border-top: 1px dashed #777777; margin-top: 40px; padding-top: 15px;">
+    <tr>
+        <td style="width: 75%; vertical-align: top; font-size: 10px; font-family: monospace; color: #444444; line-height: 14px;">
+            <p style="font-size: 11px; font-weight: bold; color: #990000; margin: 0 0 5px 0;">
+                KRA eTIMS COMPLIANT TAX RECEIPT
+            </p>
+            <p style="margin: 2px 0;"><strong>Seller PIN:</strong> {{ kra_pin }} | <strong>Branch Code:</strong> {{ kra_branch }}</p>
+            
+            {% if invoice.etims_status == "TRANSMITTED" %}
+                <p style="margin: 2px 0;"><strong>eTIMS Receipt No:</strong> {{ invoice.etims_receipt_number }}</p>
+                <p style="margin: 2px 0;"><strong>Device Signature:</strong> {{ invoice.etims_signature }}</p>
+                <p style="margin: 2px 0;"><strong>Internal Crypt Data:</strong> {{ invoice.etims_internal_data }}</p>
+            {% else %}
+                <p style="color: #aa0000; font-style: italic; margin: 5px 0;">
+                    Tax processing transmission pending in back-end system. Refresh document to display active KRA verification criteria.
+                </p>
+            {% endif %}
+        </td>
+        
+        <td style="width: 25%; text-align: right; vertical-align: top;">
+            {% if qr_code_base64 %}
+                <img src="{{ qr_code_base64 }}" width="110" height="110" style="display: inline-block;" alt="KRA Tax Validation Link" />
+            {% endif %}
+        </td>
+    </tr>
+</table>

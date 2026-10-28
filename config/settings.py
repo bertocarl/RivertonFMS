@@ -1,5 +1,17 @@
 import os
 from pathlib import Path
+from celery import Celery
+
+# Set default Django settings module for 'celery' program.
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bonje_fms.settings')  # ⚠️ Replace with your actual project directory folder name
+
+app = Celery('bonje_fms')
+
+# Load settings from Django settings using the 'CELERY_' prefix namespace.
+app.config_from_object('django.conf:settings', namespace='CELERY')
+
+# Load task modules from all registered Django app configs (picks up reports/tasks.py).
+app.autodiscover_tasks()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -8,10 +20,45 @@ def env(name, default=""):
     return os.environ.get(name, default)
 
 
-SECRET_KEY = env("DJANGO_SECRET_KEY", "dev-insecure-change-me")
+SECRET_KEY = env("DJANGO_SECRET_KEY", "totalenergies-fms-bonje-riverton")
 DEBUG = env("DJANGO_DEBUG", "1") == "1"
 ALLOWED_HOSTS = [h for h in env("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h]
 CSRF_TRUSTED_ORIGINS = [o for o in env("CSRF_TRUSTED_ORIGINS", "").split(",") if o]
+
+#KRA Etims
+
+KRA_ETIMS_BASE_URL = os.environ.get(
+    "KRA_ETIMS_BASE_URL", "https://etims-sbx.kra.go.ke/etims-oscu/v1.0"
+)
+KRA_TAXPAYER_PIN = os.environ.get("KRA_TAXPAYER_PIN")
+KRA_BRANCH_CODE = os.environ.get("KRA_BRANCH_CODE", "00")
+KRA_DEVICE_SERIAL = os.environ.get("KRA_DEVICE_SERIAL")
+KRA_CMC_KEY = os.environ.get("KRA_CMC_KEY")
+
+# --- Redis Host Configuration ---
+REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
+REDIS_PORT = os.environ.get('REDIS_PORT', '6379')
+REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
+
+# --- Celery Configuration ---
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Africa/Nairobi'  # Set to Kenya Time
+
+# --- Django Cache Configuration (Optimizes HTMX/AJAX Dashboard Polling) ---
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/1",  # Database 1 for cache, 0 for Celery
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -118,3 +165,13 @@ CELERY_TIMEZONE = TIME_ZONE
 if not DEBUG:
     SESSION_COOKIE_SECURE = env("SECURE_COOKIES", "0") == "1"
     CSRF_COOKIE_SECURE = SESSION_COOKIE_SECURE
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}

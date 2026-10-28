@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice #{{ invoice.id }}</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; margin: 20px; }
+        .invoice-box { max-width: 800px; margin: auto; font-size: 14px; line-height: 24px; }
+        .etims-compliance-section {
+            margin-top: 40px;
+            border-top: 2px dashed #bbb;
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .etims-data-text { font-size: 11px; font-family: monospace; color: #555; max-width: 70%; line-height: 1.5; }
+        .etims-qr-box { text-align: right; width: 25%; }
+        .etims-qr-box img { width: 130px; height: 130px; display: block; margin-left: auto; }
+        .badge { font-weight: bold; color: #a30000; }
+    </style>
+</head>
+<body>
+<div class="invoice-box">
+    <!-- Your standard company header & item loops here -->
+    <h2>Tax Invoice</h2>
+    <p><strong>Invoice Number:</strong> {{ invoice.id }}</p>
+    <p><strong>Date:</strong> {{ invoice.created_at|date:"Y-m-d" }}</p>
+    
+    <hr>
+    
+    <!-- Mandatory Statutory Legal eTIMS footer panel -->
+    <div class="etims-compliance-section">
+        <div class="etims-data-text">
+            <p><span class="badge">KRA eTIMS COMPLIANT RECEIPT</span></p>
+            <p><strong>Seller PIN:</strong> {{ kra_pin }} | <strong>Branch:</strong> {{ kra_branch }}</p>
+            {% if invoice.etims_status == "TRANSMITTED" %}
+                <p><strong>eTIMS Receipt No:</strong> {{ invoice.etims_receipt_number }}</p>
+                <p style="word-wrap: break-word;"><strong>Device Signature:</strong> {{ invoice.etims_signature }}</p>
+                <p style="word-wrap: break-word;"><strong>Internal Crypt Data:</strong> {{ invoice.etims_internal_data }}</p>
+            {% else %}
+                <p style="color: #c0392b;"><em>Tax processing transmission in background queue. Refresh to print official KRA breakdown.</em></p>
+            {% endif %}
+        </div>
+        
+        <div class="etims-qr-box">
+            {% if qr_code_base64 %}
+                <img src="{{ qr_code_base64 }}" alt="KRA Tax Validation Link">
+            {% endif %}
+        </div>
+    </div>
+</div>
+</body>
+</html>
