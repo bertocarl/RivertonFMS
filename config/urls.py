@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
-from . import views
+#from . import views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -13,15 +13,15 @@ urlpatterns = [
     path("purchases/", include("purchases.urls")),
     path("ledger/", include("ledger.urls")),
     path("reports/", include("reports.urls")),
-    path(
-        "invoices/<int:invoice_id>/status/", 
-        views.check_invoice_etims_status, 
-        name="check-invoice-status"
-    ),
-    path(
-        "invoices/<int:invoice_id>/pdf/", 
-        views.download_invoice_pdf, 
-        name="download-invoice-pdf"
-    ),
+    # path(
+    #     "invoices/<int:invoice_id>/status/", 
+    #     views.check_invoice_etims_status, 
+    #     name="check-invoice-status"
+    # ),
+    # path(
+    #     "invoices/<int:invoice_id>/pdf/", 
+    #     views.download_invoice_pdf, 
+    #     name="download-invoice-pdf"
+    # ),
     
 ]

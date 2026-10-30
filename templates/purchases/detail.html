@@ -1,18 +1,107 @@
 {% extends "base.html" %}
-{% block title %}Delivery {{ purchase.invoice_no }}{% endblock %}
+{% block title %}TotalEnergies Bonje &bull; Delivery {{ purchase.invoice_no }}{% endblock %}
+
 {% block content %}
-<div class="flex items-center justify-between mb-4">
-  <h1 class="text-2xl font-bold">{{ purchase.supplier }}, invoice {{ purchase.invoice_no }}
-    <span class="pill {% if purchase.status == 'POSTED' %}pill-open{% else %}pill-verified{% endif %}">{{ purchase.get_status_display }}</span></h1>
+<!-- Master Inventory Context Sub-Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-5 mb-6 gap-4">
+  <div>
+    <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">
+      <a href="{% url 'purchases:list' %}" class="hover:text-cyan-400 transition-colors">Logistics Core</a>
+      <span>&rsaquo;</span>
+      <span class="text-slate-400">Shipment Profile</span>
+    </div>
+    
+    <div class="flex flex-wrap items-center gap-3">
+      <h1 class="text-2xl font-black tracking-tight text-white uppercase">{{ purchase.supplier }}</h1>
+      <span class="text-slate-500 font-mono text-lg">/ Inv #{{ purchase.invoice_no }}</span>
+      
+      <!-- Precision Operational Status Flags -->
+      <span class="inline-block px-3 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider border 
+        {% if purchase.status == 'POSTED' %}
+          bg-emerald-950/60 text-emerald-400 border-emerald-900/80 shadow-[0_0_12px_rgba(16,185,129,0.15)]
+        {% else %}
+          bg-amber-950/60 text-amber-400 border-amber-900/80 animate-pulse
+        {% endif %}">
+        {{ purchase.get_status_display }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Real-Time Stock Reconciliation Action -->
   {% if purchase.status == "DRAFT" %}
-  <form method="post" action="{% url 'purchases:post' purchase.pk %}">{% csrf_token %}<button class="btn btn-ok" type="submit">Post and update stock</button></form>
+  <div class="w-full md:w-auto">
+    <form method="post" action="{% url 'purchases:post' purchase.pk %}">
+      {% csrf_token %}
+      <button class="w-full md:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-xs font-bold text-white uppercase tracking-wider shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all cursor-pointer text-center" type="submit">
+        Verify & Commit to Stock
+      </button>
+    </form>
+  </div>
   {% endif %}
 </div>
-<p class="text-sm mb-4" style="color:#5B6478">Delivered {{ purchase.delivery_date|date:"d/m/Y" }}{% if purchase.vehicle_reg %} by {{ purchase.vehicle_reg }}{% endif %}{% if purchase.delivery_note %}. Delivery note {{ purchase.delivery_note }}{% endif %}.</p>
-<table class="grid">
-  <thead><tr><th>Product</th><th>Tank</th><th class="num">Quantity</th><th class="num">Unit cost</th><th class="num">Total</th></tr></thead>
-  <tbody>{% for l in lines %}<tr><td>{{ l.product.name }}</td><td>{{ l.tank|default_if_none:"—" }}</td><td class="num">{{ l.quantity }}</td><td class="num">{{ l.unit_cost }}</td><td class="num">{{ l.line_total }}</td></tr>{% endfor %}</tbody>
-  <tfoot><tr><td colspan="4">Total</td><td class="num">{{ purchase.total }}</td></tr></tfoot>
-</table>
-<p class="mt-4"><a class="underline" href="{% url 'purchases:list' %}">Back to deliveries</a></p>
+
+<!-- Logistics Shipment Metadata Sub-Bar -->
+<div class="bg-slate-950 border border-slate-900/80 rounded-xl p-4 mb-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+  <div>
+    <span class="text-slate-600 mr-1.5">Delivered:</span>
+    <span class="text-slate-200 font-mono">{{ purchase.delivery_date|date:"d/m/Y" }}</span>
+  </div>
+  {% if purchase.vehicle_reg %}
+  <div class="border-l border-slate-800 pl-6">
+    <span class="text-slate-600 mr-1.5">Tanker Reg:</span>
+    <span class="text-cyan-400 font-mono">{{ purchase.vehicle_reg }}</span>
+  </div>
+  {% endif %}
+  {% if purchase.delivery_note %}
+  <div class="border-l border-slate-800 pl-6">
+    <span class="text-slate-600 mr-1.5">Delivery Note:</span>
+    <span class="text-slate-200 font-mono">#{{ purchase.delivery_note }}</span>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Ledger Throughput Sheet -->
+<div class="bg-slate-900/40 border border-slate-800/60 rounded-2xl overflow-hidden shadow-xl backdrop-blur-sm mb-6">
+  <table class="w-full text-left border-collapse">
+    <thead>
+      <tr class="bg-slate-950 border-b border-slate-800">
+        <th class="py-3.5 px-5 text-xs font-bold text-slate-400 uppercase tracking-wider">Product SKU</th>
+        <th class="py-3.5 px-5 text-xs font-bold text-slate-400 uppercase tracking-wider">Destination Asset</th>
+        <th class="py-3.5 px-5 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Volume (L)</th>
+        <th class="py-3.5 px-5 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Unit Rate</th>
+        <th class="py-3.5 px-5 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Gross Total</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-800/50">
+      {% for l in lines %}
+      <tr class="hover:bg-slate-900/20 transition-colors">
+        <td class="py-4 px-5 text-sm font-bold text-white">{{ l.product.name }}</td>
+        <td class="py-4 px-5 text-sm font-semibold text-slate-400">
+          {% if l.tank %}
+            <span class="text-cyan-500 font-mono">&bull;</span> {{ l.tank.name }}
+          {% else %}
+            <span class="text-slate-600">&mdash;</span>
+          {% endif %}
+        </td>
+        <td class="py-4 px-5 text-sm font-mono font-bold text-slate-200 text-right">{{ l.quantity|floatformat:2 }} L</td>
+        <td class="py-4 px-5 text-sm font-mono font-medium text-slate-400 text-right">{{ CURRENCY|default:"KES" }} {{ l.unit_cost|floatformat:2 }}</td>
+        <td class="py-4 px-5 text-sm font-mono font-bold text-white text-right">{{ CURRENCY|default:"KES" }} {{ l.line_total|floatformat:2 }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr class="bg-slate-950/80 border-t-2 border-slate-800 font-black">
+        <td colspan="4" class="py-4 px-5 text-xs font-black uppercase tracking-widest text-slate-400">Net Aggregate Investment</td>
+        <td class="py-4 px-5 text-base font-mono font-black text-cyan-400 text-right">{{ CURRENCY|default:"KES" }} {{ purchase.total|floatformat:2 }}</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<!-- Back Navigation Action Link -->
+<div class="px-1">
+  <a class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-slate-300 transition-colors" href="{% url 'purchases:list' %}">
+    <span>&larr;</span> Return to Logistics Index
+  </a>
+</div>
 {% endblock %}

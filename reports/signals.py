@@ -14,3 +14,24 @@ def queue_etims_transmission(sender, instance, created, **kwargs):
         transaction.on_commit(
             lambda: transmit_invoice_to_etims_task.delay(instance.id)
         )
+    from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.db import transaction
+from .models import Invoice
+# from .tasks import transmit_invoice_to_etims_task, transmit_credit_note_to_etims_task
+
+@receiver(post_save, sender=Invoice)
+def queue_etims_transmission(sender, instance, created, **kwargs):
+    """
+    Listens for new invoices/credit notes and forwards them to Celery safely.
+    """
+    if created and instance.etims_status == "PENDING":
+        if instance.is_credit_note:
+            transaction.on_commit(
+                lambda: transmit_credit_note_to_etims_task.delay(instance.id)
+            )
+        else:
+            transaction.on_commit(
+                lambda: transmit_invoice_to_etims_task.delay(instance.id)
+            )
+

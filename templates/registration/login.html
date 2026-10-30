@@ -1,19 +1,75 @@
 {% extends "base.html" %}
-{% block title %}Sign in{% endblock %}
+{% block title %}TotalEnergies Bonje &bull; Core Sign-In Gateway{% endblock %}
+
 {% block content %}
-<div class="max-w-sm mx-auto mt-16 panel">
-  <h1 class="text-xl font-bold mb-1">RIVERTON FMS</h1>
-  <p class="text-sm mb-5" style="color:#5B6478">TotalEnergies Bonje forecourt management</p>
-  <form method="post">
-    {% csrf_token %}
-    {% if form.non_field_errors %}<p class="err mb-3">Wrong username or password. Try again.</p>{% endif %}
-    <div class="mb-4"><label class="lbl" for="id_username">Username</label>
-      <input class="fld" name="username" id="id_username" autofocus autocomplete="username" required></div>
-    <div class="mb-5"><label class="lbl" for="id_password">Password</label>
-      <input class="fld" type="password" name="password" id="id_password" autocomplete="current-password" required></div>
-    <input type="hidden" name="next" value="{{ next }}">
-    <button class="btn btn-primary w-full" type="submit">OK</button>
-    <p class="help mt-3">After typing your password, press Tab, then OK.</p>
-  </form>
+<!-- Full-Bleed High-Definition Immersive Canvas Backdrop Wrapper -->
+<div class="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat z-0 flex items-center justify-center p-4" 
+     style="background-image: linear-gradient(135deg, rgba(6, 11, 19, 0.88) 30%, rgba(10, 17, 40, 0.65) 100%), url('https://framerusercontent.com');">
+  
+  <!-- Premium Glassmorphic Security Control Deck -->
+  <div class="w-full max-w-md bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-8 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10">
+    
+    
+    <div class="text-center mb-8 border-b border-slate-800/60 pb-6">
+      <div class="flex items-center justify-center gap-2 mb-2">
+        <span class="h-2 w-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_10px_rgba(34,211,238,0.7)]"></span>
+        <h1 class="text-2xl font-black tracking-wider text-white uppercase font-sans">Riverton FMS</h1>
+      </div>
+      <p class="text-xs font-bold uppercase tracking-widest text-slate-400">TotalEnergies Bonje Forecourt Control</p>
+    </div>
+
+    <!-- Interactive System Operations Form -->
+    <form method="post" class="space-y-5">
+      {% csrf_token %}
+      
+      <!-- System Authentication Failure Banner -->
+      {% if form.non_field_errors %}
+      <div class="px-4 py-2.5 rounded-xl border bg-red-950/40 border-red-900/60 text-red-400 text-xs font-bold font-mono tracking-wide text-center shadow-[0_0_12px_rgba(239,68,68,0.15)] animate-shake">
+        &times; Authentication Denied. Re-verify Credentials.
+      </div>
+      {% endif %}
+
+      
+      <div class="group">
+        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 transition-colors group-focus-within:text-cyan-400" for="id_username">
+          Operator Username
+        </label>
+        <div class="relative rounded-xl overflow-hidden shadow-inner border border-slate-800 focus-within:border-cyan-500 focus-within:ring-4 focus-within:ring-cyan-950/50 transition-all duration-150">
+          <input class="w-full bg-slate-950/90 text-white text-sm px-4 py-3.5 outline-none font-semibold" 
+                 name="username" id="id_username" autofocus autocomplete="username" required placeholder="Enter username">
+        </div>
+      </div>
+
+      <!-- Security Lock Key Input Field -->
+      <div class="group">
+        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 transition-colors group-focus-within:text-cyan-400" for="id_password">
+          Security Password
+        </label>
+        <div class="relative rounded-xl overflow-hidden shadow-inner border border-slate-800 focus-within:border-cyan-500 focus-within:ring-4 focus-within:ring-cyan-950/50 transition-all duration-150">
+          <input class="w-full bg-slate-950/90 text-white text-sm px-4 py-3.5 outline-none font-mono font-bold" 
+                 type="password" name="password" id="id_password" autocomplete="current-password" required placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;">
+        </div>
+      </div>
+
+      <!-- Target Navigation Context Redirector -->
+      <input type="hidden" name="next" value="{{ next }}">
+
+      <!-- System Gateway Trigger Action -->
+      <div class="pt-2">
+        <button class="w-full px-6 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-sm font-bold text-white uppercase tracking-wider shadow-[0_0_20px_rgba(6,182,212,0.15)] hover:shadow-[0_0_25px_rgba(6,182,212,0.3)] transition-all duration-150 cursor-pointer text-center" 
+                type="submit">
+          Initialize System Session
+        </button>
+      </div>
+
+      <!-- Compliance Operational Footnote Guidance -->
+      <div class="text-center pt-2">
+        <p class="text-[10px] font-medium tracking-wider text-slate-500 uppercase leading-normal">
+          Secured Session Terminal &bull; Shift Tracking Enforced
+        </p>
+      </div>
+    </form>
+  </div>
 </div>
+
 {% endblock %}

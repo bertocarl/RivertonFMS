@@ -1,8 +1,6 @@
 import datetime
 from decimal import ROUND_HALF_UP, Decimal
 
-from django.utils import timezone
-
 TWO = Decimal("0.01")
 
 
@@ -26,7 +24,7 @@ def fmt(value, places=2):
     if isinstance(value, Decimal):
         return f"{value:,.{places}f}"
     if isinstance(value, datetime.datetime):
-        return timezone.localtime(value).strftime("%d/%m/%Y %H:%M") if timezone.is_aware(value) else value.strftime("%d/%m/%Y %H:%M")
+        return value.astimezone().strftime("%d/%m/%Y %H:%M") if value.utcoffset() is not None else value.strftime("%d/%m/%Y %H:%M")
     if isinstance(value, datetime.date):
         return value.strftime("%d/%m/%Y")
     return str(value)

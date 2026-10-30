@@ -1,33 +1,91 @@
 {% extends "base.html" %}
-{% block title %}{{ title }}{% endblock %}
+{% block title %}TotalEnergies Bonje &bull; {{ title }}{% endblock %}
+
 {% block content %}
-<div class="flex items-center justify-between mb-4">
-  <h1 class="text-2xl font-bold">{{ title }}</h1>
-  {% if add_url %}<a class="btn btn-primary" href="{{ add_url }}">{{ add_label }}</a>{% endif %}
+<!-- Master Header & Action Delivery Unit -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-5 mb-8 gap-4">
+  <div>
+    <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">
+      <a href="/" class="hover:text-cyan-400 transition-colors">Control Center</a>
+      <span>&rsaquo;</span>
+      <span class="text-slate-400">{{ title }}</span>
+    </div>
+    <h1 class="text-2xl font-black tracking-tight text-white uppercase">{{ title }}</h1>
+  </div>
+  
+  {% if add_url %}
+  <a class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-xs font-bold text-white uppercase tracking-wider shadow-[0_0_20px_rgba(6,182,212,0.15)] transition-all duration-150 text-center" href="{{ add_url }}">
+    + {{ add_label }}
+  </a>
+  {% endif %}
 </div>
-<div class="overflow-x-auto">
-<table class="grid">
-  <thead><tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}<th></th></tr></thead>
-  <tbody>
-  {% for row in rows %}
-    <tr>
-      {% for c in row.cells %}<td>{{ c }}</td>{% endfor %}
-      <td class="num">
-        {% if row.edit %}<a class="underline" href="{{ row.edit }}">Edit</a>{% endif %}
-        {% if row.open_url %}<a class="underline" href="{% url request.resolver_match.app_name|add:':detail' row.open_url %}">Open</a>{% endif %}
-      </td>
-    </tr>
-  {% empty %}
-    <tr><td colspan="{{ headers|length|add:1 }}" class="py-6 text-center" style="color:#5B6478">Nothing here yet.{% if add_url %} Use “{{ add_label }}” to add the first one.{% endif %}</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
+
+<!-- Ledger Wrapper Array -->
+<div class="bg-slate-900/40 border border-slate-800/60 rounded-2xl overflow-hidden shadow-xl backdrop-blur-sm">
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-slate-950 border-b border-slate-800/80">
+          {% for h in headers %}
+          <th class="py-4 px-5 text-xs font-bold text-slate-400 uppercase tracking-wider">{{ h }}</th>
+          {% endfor %}
+          <th class="py-4 px-5 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">System Management</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-800/50">
+      {% for row in rows %}
+        <tr class="hover:bg-slate-900/30 transition-colors group">
+          {% for c in row.cells %}
+          <td class="py-4 px-5 text-sm font-semibold text-slate-300 group-hover:text-white transition-colors">{{ c }}</td>
+          {% endfor %}
+          <td class="py-4 px-5 text-sm text-right space-x-2 whitespace-nowrap">
+            {% if row.open_url %}
+            <a class="inline-block px-3 py-1 rounded-lg text-xs font-bold bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-900/50 text-cyan-400 tracking-wide transition-all" href="{% url request.resolver_match.app_name|add:':detail' row.open_url %}">
+              Open Asset
+            </a>
+            {% endif %}
+            {% if row.edit %}
+            <a class="inline-block px-3 py-1 rounded-lg text-xs font-bold bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 tracking-wide transition-all" href="{{ row.edit }}">
+              Modify
+            </a>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="{{ headers|length|add:1 }}" class="py-12 px-5 text-center">
+            <div class="text-sm font-medium text-slate-500 mb-2">No active records registered in this context block.</div>
+            {% if add_url %}
+            <p class="text-xs text-slate-600 uppercase tracking-wider font-bold">
+              Select <a href="{{ add_url }}" class="text-cyan-500 hover:underline">“{{ add_label }}”</a> above to initialize records.
+            </p>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
+
+<!-- Premium Interface Pagination Unit -->
 {% if is_paginated %}
-<div class="flex gap-3 mt-4 text-sm">
-  {% if page_obj.has_previous %}<a class="btn" href="?page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}
-  <span class="py-2">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
-  {% if page_obj.has_next %}<a class="btn" href="?page={{ page_obj.next_page_number }}">Next</a>{% endif %}
+<div class="flex items-center justify-between mt-6 px-1 text-xs font-bold uppercase tracking-widest text-slate-500">
+  <div>
+    Page <span class="text-slate-300 font-mono">{{ page_obj.number }}</span> of <span class="text-slate-300 font-mono">{{ paginator.num_pages }}</span>
+  </div>
+  <div class="flex gap-2">
+    {% if page_obj.has_previous %}
+    <a class="px-4 py-2 rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 transition-colors" href="?page={{ page_obj.previous_page_number }}">
+      Previous
+    </a>
+    {% endif %}
+    {% if page_obj.has_next %}
+    <a class="px-4 py-2 rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 transition-colors" href="?page={{ page_obj.next_page_number }}">
+      Next
+    </a>
+    {% endif %}
+  </div>
 </div>
 {% endif %}
 {% endblock %}

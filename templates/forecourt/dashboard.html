@@ -1,45 +1,168 @@
 {% extends "base.html" %}
-{% block title %}Dashboard{% endblock %}
+{% block title %}TotalEnergies Bonje - Premium Control Center{% endblock %}
+
 {% block content %}
-<h1 class="text-2xl font-bold mb-1">Today, {{ today|date:"l j F Y" }}</h1>
-<p class="mb-6" style="color:#5B6478">Sales recorded so far today across all shifts.</p>
-
-<div class="grid gap-4 md:grid-cols-5 mb-8">
-  <div class="panel md:col-span-2">
-    <div class="text-sm font-semibold">Total sales</div>
-    <div class="text-4xl font-bold mt-1">{{ CURRENCY }} {{ total_today|floatformat:2 }}</div>
+<!-- Elite Top-Bar & Live Operational Metadata -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-800 pb-6 mb-8 gap-4">
+  <div>
+    <div class="flex items-center gap-3 mb-1">
+      <span class="h-3 w-3 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_10px_rgba(34,211,238,0.7)]"></span>
+      <h1 class="text-3xl font-extrabold tracking-tight text-white uppercase">Bonje Service Station</h1>
+    </div>
+    <p class="text-sm font-medium tracking-wide uppercase text-slate-400">Live Station Analytics &bull; {{ today|date:"l, j F Y" }}</p>
   </div>
-  <div class="panel"><div class="text-sm">Cash</div><div class="text-xl font-semibold">{{ by_method.CASH|default:0|floatformat:2 }}</div></div>
-  <div class="panel"><div class="text-sm">M-Pesa</div><div class="text-xl font-semibold">{{ by_method.MPESA|default:0|floatformat:2 }}</div></div>
-  <div class="panel"><div class="text-sm">Card</div><div class="text-xl font-semibold">{{ by_method.CARD|default:0|floatformat:2 }}</div></div>
+  <div class="bg-slate-900 border border-slate-800 px-4 py-2 rounded-xl text-right">
+    <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active System State</span>
+    <span class="text-xs font-semibold text-cyan-400">All Shifts Synchronized</span>
+  </div>
 </div>
-<p class="text-sm mb-6">Credit sales today: <strong>{{ by_method.CREDIT|default:0|floatformat:2 }}</strong></p>
 
-<div class="grid gap-6 lg:grid-cols-2">
-  <section>
-    <h2 class="text-lg font-bold mb-2">Tanks</h2>
-    <div class="panel space-y-4">
-      {% for t in tanks %}
+<!-- Primary Financial Leverage Grid -->
+<div class="grid gap-6 md:grid-cols-12 mb-8">
+  <!-- The Core Revenue Engine -->
+  <div class="md:col-span-4 bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 border border-slate-800 p-6 rounded-2xl shadow-xl relative overflow-hidden group">
+    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+      <svg class="w-24 h-24 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+    </div>
+    <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Total Gross Volume Today</div>
+    <div class="text-4xl font-black text-white tracking-tight">{{ CURRENCY }} {{ total_today|floatformat:2 }}</div>
+    <div class="mt-4 flex items-center gap-2 text-xs text-emerald-400 bg-emerald-950/50 border border-emerald-900/50 px-2 py-1 rounded-lg w-fit">
+      <span>&uarr; Live Feed Active</span>
+    </div>
+  </div>
+
+  <!-- Segmented Payment Distribution Hub -->
+  <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <!-- Cash Desk -->
+    <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800/80 p-5 rounded-2xl flex flex-col justify-between hover:border-slate-700 transition-colors">
       <div>
-        <div class="flex justify-between text-sm"><span class="font-semibold">{{ t.name }}, {{ t.product.name }}</span>
-          <span>{{ t.current_level|floatformat:0 }} of {{ t.capacity|floatformat:0 }} L{% if t.is_low %} <span class="pill" style="background:#FBD5DA;color:#8A0019">Low</span>{% endif %}</span></div>
-        <div class="h-3 rounded bg-slate-200 mt-1"><div class="h-3 rounded" style="width:{{ t.percent_full|default:0 }}%;background:{% if t.is_low %}var(--red){% else %}var(--green){% endif %}"></div></div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Cash Register</span>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">Liquid</span>
+        </div>
+        <div class="text-2xl font-extrabold text-white">{{ by_method.CASH|default:0|floatformat:2 }}</div>
       </div>
-      {% empty %}<p class="text-sm">No tanks yet.</p>{% endfor %}
+      <div class="text-[11px] text-slate-500 mt-2 font-mono">Currency Base: {{ CURRENCY }}</div>
     </div>
-  </section>
-  <section>
-    <h2 class="text-lg font-bold mb-2">Fuel sold today</h2>
-    <table class="grid">
-      <thead><tr><th>Product</th><th class="num">Litres</th><th class="num">{{ CURRENCY }}</th></tr></thead>
-      <tbody>{% for f in fuel_today %}<tr><td>{{ f.product__name }}</td><td class="num">{{ f.litres|floatformat:2 }}</td><td class="num">{{ f.value|floatformat:2 }}</td></tr>
-      {% empty %}<tr><td colspan="3" class="py-4 text-center">No fuel sales entered yet today.</td></tr>{% endfor %}</tbody>
-    </table>
-    <h2 class="text-lg font-bold mt-6 mb-2">Money and stock to watch</h2>
-    <div class="panel text-sm space-y-2">
-      <p>Credit customers owe <strong>{{ CURRENCY }} {{ receivables|floatformat:2 }}</strong>.</p>
-      {% for p in low_items %}<p>Reorder <strong>{{ p.name }}</strong>: {{ p.stock_qty }} left.</p>{% empty %}<p>No shop items are below their reorder level.</p>{% endfor %}
+
+    <!-- Mobile Money (M-Pesa Preferred Accent) -->
+    <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800/80 p-5 rounded-2xl flex flex-col justify-between hover:border-slate-700 transition-colors">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">M-Pesa Vault</span>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-900 font-bold">Instant</span>
+        </div>
+        <div class="text-2xl font-extrabold text-white">{{ by_method.MPESA|default:0|floatformat:2 }}</div>
+      </div>
+      <div class="text-[11px] text-slate-500 mt-2 font-mono">Channel Status: Online</div>
     </div>
-  </section>
+
+    <!-- Merchant Cards -->
+    <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800/80 p-5 rounded-2xl flex flex-col justify-between hover:border-slate-700 transition-colors">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Card Banking</span>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-blue-950 text-blue-400 border border-blue-900">Clearing</span>
+        </div>
+        <div class="text-2xl font-extrabold text-white">{{ by_method.CARD|default:0|floatformat:2 }}</div>
+      </div>
+      <div class="text-[11px] text-slate-500 mt-2 font-mono">Settlement: T+1</div>
+    </div>
+  </div>
 </div>
+
+<!-- Risk Mitigation Sub-Bar -->
+<div class="bg-slate-950 border border-slate-900 rounded-xl p-4 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-inner">
+  <div class="flex items-center gap-3">
+    <div class="h-2 w-2 rounded-full bg-amber-400"></div>
+    <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Deferred Book Exposure</p>
+  </div>
+  <div class="text-sm font-bold text-slate-300">
+    Outstanding Unsettled Credit Today: 
+    <span class="text-amber-400 font-black ml-1">{{ CURRENCY }} {{ by_method.CREDIT|default:0|floatformat:2 }}</span>
+  </div>
+</div>
+
+<!-- Wet & Dry Logistics Core -->
+<div class="grid gap-8 lg:grid-cols-12">
+  <!-- Fuel Reservoir Real-Time Telemetry -->
+  <section class="lg:col-span-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-sm font-black text-white uppercase tracking-widest">Wet Stock Reservoir Levels</h2>
+      <span class="text-[11px] font-bold text-slate-500 tracking-wider">Ullage Safe</span>
+    </div>
+    <div class="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 space-y-6 shadow-xl backdrop-blur-sm">
+      {% for t in tanks %}
+      <div class="space-y-2">
+        <div class="flex justify-between items-baseline">
+          <div>
+            <span class="text-sm font-bold text-white block">{{ t.name }}</span>
+            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{{ t.product.name }}</span>
+          </div>
+          <div class="text-right">
+            <span class="text-sm font-mono font-bold text-slate-200">{{ t.current_level|floatformat:0 }}</span>
+            <span class="text-[11px] font-medium text-slate-500">/ {{ t.capacity|floatformat:0 }} L</span>
+            {% if t.is_low %}
+            <span class="ml-2 inline-block text-[9px] font-extrabold uppercase bg-red-950 text-red-400 border border-red-900 px-2 py-0.5 rounded shadow-[0_0_12px_rgba(239,68,68,0.2)] animate-pulse">Critical Low</span>
+            {% endif %}
+          </div>
+        </div>
+        <!-- Modernized Telemetry Bar -->
+        <div class="h-2.5 rounded-full bg-slate-950 border border-slate-800 p-[2px] overflow-hidden">
+          <div class="h-full rounded-full transition-all duration-500 relative" 
+               style="width:{{ t.percent_full|default:0 }}%; background: {% if t.is_low %}linear-gradient(90deg, #EF4444, #DC2626){% else %}linear-gradient(90deg, #06B6D4, #3B82F6){% endif %};">
+            <div class="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)] bg-[length:8px_8px] animate-[progress_1s_linear_infinite]"></div>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="text-center py-6">
+        <p class="text-sm text-slate-500 font-medium">No storage assets mapped to this dashboard environment.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Commercial Throughput Ledger -->
+  <section class="lg:col-span-7 space-y-8">
+    <div>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm font-black text-white uppercase tracking-widest">Dispensation Volume Ledger</h2>
+        <span class="text-[11px] font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-900/60 px-2 py-0.5 rounded">Reconciled</span>
+      </div>
+      <div class="bg-slate-900/40 border border-slate-800/60 rounded-2xl overflow-hidden shadow-xl backdrop-blur-sm">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-950 border-b border-slate-800">
+              <th class="py-3.5 px-5 text-xs font-bold text-slate-400 uppercase tracking-wider">Product SKU</th>
+              <th class="py-3.5 px-5 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Throughput (L)</th>
+              <th class="py-3.5 px-5 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Value Generated</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60">
+            {% for f in fuel_today %}
+            <tr class="hover:bg-slate-900/40 transition-colors">
+              <td class="py-4 px-5 text-sm font-bold text-white">{{ f.product__name }}</td>
+              <td class="py-4 px-5 text-sm font-mono font-semibold text-slate-300 text-right">{{ f.litres|floatformat:2 }} L</td>
+              <td class="py-4 px-5 text-sm font-mono font-bold text-cyan-400 text-right">{{ CURRENCY }} {{ f.value|floatformat:2 }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="3" class="py-8 px-5 text-center text-sm text-slate-500 font-medium">
+                No active delivery metrics registered for current operational shift.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Financial Exposure & High-Velocity Inventory Monitoring -->
+    <div>
+      <h2 class="text-sm font-black text-white uppercase tracking-widest mb-4">Capital Flow & Forecourt Shop Watch</h2>
+      <div class="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 shadow-xl backdrop-blur-sm grid gap-4 sm:grid-cols-2">
+        <!-- Accounts Receivable Risk Box -->
+        <div class="bg-slate-950 border border-slate-900 p-4 rounded-xl flex flex-col justify-between">
+
 {% endblock %}

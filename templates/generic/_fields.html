@@ -1,9 +1,56 @@
-{% if form.non_field_errors %}<div class="mb-4 px-4 py-3 rounded border bg-red-50 border-red-300 text-red-900 text-sm">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+<!-- High-Impact System Warning Banner -->
+{% if form.non_field_errors %}
+<div class="mb-6 px-4 py-3 rounded-xl border bg-red-950/40 border-red-900/60 text-red-200 text-sm shadow-[0_0_15px_rgba(239,68,68,0.15)] flex flex-col gap-1">
+  <div class="flex items-center gap-2 font-bold uppercase text-[11px] tracking-wider text-red-400 mb-1">
+    <span class="h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
+    Validation Block Failure
+  </div>
+  {% for e in form.non_field_errors %}
+  <p class="font-medium text-slate-300">&bull; {{ e }}</p>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Field Render Matrix -->
 {% for field in form %}
-<div class="mb-4">
-  <label class="lbl" for="{{ field.id_for_label }}">{{ field.label }}</label>
-  {% if field.name == "unit_price" %}<div id="price-wrap">{{ field }}</div>{% else %}{{ field }}{% endif %}
-  {% if field.help_text %}<p class="help">{{ field.help_text }}</p>{% endif %}
-  {% for e in field.errors %}<p class="err">{{ e }}</p>{% endfor %}
+<div class="mb-5 group">
+  <!-- Interactive Label Structure -->
+  <label class="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2 transition-colors group-focus-within:text-cyan-400" for="{{ field.id_for_label }}">
+    {{ field.label }}
+    {% if field.field.required %}<span class="text-cyan-400 ml-0.5">*</span>{% endif %}
+  </label>
+  
+  {% if field.name == "unit_price" or field.name == "value" %}
+  <!-- Precision Currency Prefix Bay -->
+  <div id="price-wrap" class="relative flex items-center rounded-xl overflow-hidden shadow-inner bg-slate-950 border {% if field.errors %}border-red-900 focus-within:border-red-500 focus-within:ring-red-950/50{% else %}border-slate-800 focus-within:border-cyan-500 focus-within:ring-cyan-950/50{% endif %} focus-within:ring-4 transition-all duration-150">
+    <div class="px-4 py-3 bg-slate-900/80 border-r border-slate-800 text-xs font-mono font-black tracking-wider text-slate-400 select-none">
+      {{ CURRENCY|default:"KES" }}
+    </div>
+    <!-- Dynamically Injected Django Widget Object -->
+    {% if field.errors %}
+      {{ field }}
+    {% else %}
+      {{ field }}
+    {% endif %}
+  </div>
+  
+  {% else %}
+  <!-- Core Universal Form Wrapper -->
+  <div class="relative rounded-xl shadow-inner transition-all duration-150 {% if field.errors %}form-error-ring{% endif %}">
+    {{ field }}
+  </div>
+  {% endif %}
+
+  <!-- Field Operational Metadata Guidance -->
+  {% if field.help_text %}
+  <p class="mt-1.5 text-[11px] font-medium tracking-wide text-slate-500 uppercase leading-relaxed">{{ field.help_text }}</p>
+  {% endif %}
+
+  <!-- Isolated Field Precision Errors -->
+  {% for e in field.errors %}
+  <div class="mt-1.5 flex items-center gap-1.5 text-xs font-bold text-red-400 font-mono">
+    <span>&times;</span> {{ e }}
+  </div>
+  {% endfor %}
 </div>
 {% endfor %}

@@ -9,7 +9,7 @@ from common.views import SUPERVISORS
 from .forms import ReportRequestForm
 from .models import ReportRun
 from .pdf import render_pdf
-from .tasks import build_report
+# from .tasks import build_report
 
 from django.conf import settings
 from django.contrib import messages
@@ -25,6 +25,7 @@ from xhtml2pdf import pisa
 
 from .models import Invoice
 from .utils import fmt, generate_etims_qr_code
+
 
 FINANCE = ("accountant", "manager")
 
@@ -147,15 +148,24 @@ def report_home(request):
     form = ReportRequestForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         run = ReportRun.objects.create(
-            kind=form.cleaned_data["kind"], report_date=form.cleaned_data["report_date"], requested_by=request.user
+            kind=form.cleaned_data["kind"], 
+            report_date=form.cleaned_data["report_date"], 
+            requested_by=request.user
         )
+        
+        # 2. INJECT the import right here inside the function block to prevent circular locks:
+        from .tasks import build_report 
+        
         result = build_report.delay(run.pk)
         task_id = getattr(result, "id", "") or ""
         if task_id:
             ReportRun.objects.filter(pk=run.pk).update(task_id=str(task_id))
         return redirect("reports:detail", pk=run.pk)
-    return render(request, "reports/home.html", {"form": form, "runs": ReportRun.objects.select_related("requested_by")[:15]})
-
+        
+    return render(request, "reports/home.html", {
+        "form": form, 
+        "runs": ReportRun.objects.select_related("requested_by").order_by('-id')[:15]
+    })
 
 def _page_number(request, total):
     try:
@@ -215,3 +225,45 @@ def report_pdf(request, pk):
     response = HttpResponse(pdf, content_type="application/pdf")
     response["Content-Disposition"] = f'inline; filename="{run.kind}-{run.report_date:%Y%m%d}-p{start}-{end}.pdf"'
     return response
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.has_role(*FINANCE), redirect_field_name=None)
+def issue_invoice_credit_note(request, invoice_id):
+    """
+    Creates a matching cancellation credit note record from an existing invoice.
+    """
+    original = get_object_or_404(Invoice, id=invoice_id, is_credit_note=False)
+    
+    if original.etims_status != "TRANSMITTED":
+        messages.error(request, "Cannot reverse an invoice that hasn't been successfully sent to KRA.")
+        return redirect('reports:invoice-list')
+        
+    # Check if a reversal already exists to prevent duplicate claims
+    if Invoice.objects.filter(original_invoice=original, etims_status="TRANSMITTED").exists():
+        messages.warning(request, "This transaction has already been reversed.")
+        return redirect('reports:invoice-list')
+
+    # Create the Credit Note transaction tracking instance
+    credit_note = Invoice.objects.create(
+        customer=original.customer,
+        total_amount=original.total_amount,
+        payment_method_code=original.payment_method_code,
+        is_credit_note=True,
+        original_invoice=original,
+        reversal_reason_code="02", # "02" represents data correction / voiding
+        etims_status="PENDING"
+    )
+
+    # Replicate invoice lines exactly with matching values
+    for line in original.lines.all():
+        credit_note.lines.create(
+            product=line.product,
+            quantity=line.quantity,
+            unit_price=line.unit_price,
+            subtotal=line.subtotal,
+            taxable_amount=line.taxable_amount,
+            vat_amount=line.vat_amount,
+            total_amount=line.total_amount
+        )
+        
+    messages.success(request, f"Credit Note #{credit_note.id} initialized and queued for KRA transmission.")
+    return redirect('reports:invoice-list')

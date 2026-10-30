@@ -1,0 +1,32 @@
+/* Automated styling targeting elements rendered inside our dark theme wrappers */
+input[type="text"], input[type="number"], input[type="password"], input[type="email"], select, textarea {
+    width: 100%;
+    background-color: #020617 !important; /* bg-slate-950 */
+    color: #f8fafc !important; /* text-slate-50 */
+    border: 1px solid #1e293b !important; /* border-slate-800 */
+    border-radius: 0.75rem !important; /* 12px rounded-xl */
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important; /* text-sm */
+    transition: all 150ms ease;
+    outline: none !important;
+}
+
+/* Specific inner adjustment when nested inside the currency layout wrapper */
+#price-wrap input {
+    border: none !important;
+    border-radius: 0px !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Interactive Neon Focus Profiles */
+input:focus, select:focus, textarea:focus {
+    border-color: #06b6d4 !important; /* cyan-500 */
+    box-shadow: 0 0 0 4px rgba(8, 145, 178, 0.25) !important; /* cyan-950 footprint */
+}
+
+/* Red Error Flag Interventions */
+.form-error-ring input, input.is-invalid {
+    border-color: #ef4444 !important; /* red-500 */
+    box-shadow: 0 0 0 4px rgba(153, 27, 27, 0.25) !important;
+}

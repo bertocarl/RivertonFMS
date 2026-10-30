@@ -2,50 +2,207 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Invoice #{{ invoice.id }}</title>
+    <title>TotalEnergies Bonje &bull; Invoice #{{ invoice.id }}</title>
     <style>
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; margin: 20px; }
-        .invoice-box { max-width: 800px; margin: auto; font-size: 14px; line-height: 24px; }
-        .etims-compliance-section {
-            margin-top: 40px;
-            border-top: 2px dashed #bbb;
-            padding-top: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        /* High-Density Print Architecture Reset */
+        body { 
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+            color: #0A1128; 
+            margin: 10px; 
+            background: #fff;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
-        .etims-data-text { font-size: 11px; font-family: monospace; color: #555; max-width: 70%; line-height: 1.5; }
-        .etims-qr-box { text-align: right; width: 25%; }
-        .etims-qr-box img { width: 130px; height: 130px; display: block; margin-left: auto; }
-        .badge { font-weight: bold; color: #a30000; }
+        .invoice-box { 
+            max-width: 800px; 
+            margin: auto; 
+            font-size: 13px; 
+            line-height: 20px; 
+        }
+        
+        /* Modernized Header Utilities */
+        .invoice-header-table {
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        .station-title {
+            font-size: 24px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+            color: #0A1128;
+            margin: 0 0 4px 0;
+        }
+        .meta-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            font-weight: bold;
+        }
+        .meta-value {
+            font-weight: 700;
+            color: #0A1128;
+        }
+
+        /* Premium Statutory KRA eTIMS Footer Panel */
+        .etims-compliance-card {
+            margin-top: 50px;
+            page-break-inside: avoid;
+            border: 1px solid #cbd5e1;
+            background-color: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            display: table;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .etims-column-left {
+            display: table-cell;
+            width: 72%;
+            vertical-align: top;
+            padding-right: 20px;
+        }
+        .etims-column-right {
+            display: table-cell;
+            width: 28%;
+            vertical-align: middle;
+            text-align: right;
+        }
+        
+        /* Visual Compliance Anchors */
+        .etims-badge { 
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 900; 
+            color: #fff; 
+            background: #0A1128;
+            border-left: 3px solid #00E5FF;
+            padding: 3px 8px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        .etims-data-grid {
+            width: 100%;
+            font-size: 11px;
+            font-family: 'Courier New', Courier, monospace;
+            line-height: 16px;
+            color: #334155;
+        }
+        .etims-data-grid td {
+            padding: 2px 0;
+            vertical-align: top;
+        }
+        .etims-label {
+            font-weight: bold;
+            color: #64748b;
+            width: 130px;
+            white-space: nowrap;
+        }
+        .etims-value {
+            color: #0A1128;
+            word-break: break-all;
+        }
+        
+        /* System Operational Flags */
+        .etims-qr-img { 
+            width: 125px; 
+            height: 125px; 
+            display: block; 
+            margin-left: auto;
+            border: 1px solid #e2e8f0;
+            padding: 4px;
+            background: #fff;
+            border-radius: 8px;
+        }
+        .queue-alert-box {
+            background-color: #fef2f2;
+            border: 1px solid #fee2e2;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 5px;
+        }
+        .queue-message { 
+            color: #FF3B30; 
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
 <div class="invoice-box">
-    <!-- Your standard company header & item loops here -->
-    <h2>Tax Invoice</h2>
-    <p><strong>Invoice Number:</strong> {{ invoice.id }}</p>
-    <p><strong>Date:</strong> {{ invoice.created_at|date:"Y-m-d" }}</p>
     
-    <hr>
+    <table class="invoice-header-table">
+        <tr>
+            <td style="vertical-align: top;">
+                <h1 class="station-title">TotalEnergies Bonje</h1>
+                <span class="meta-label">Premium Forecourt Control Hub</span>
+            </td>
+            <td style="text-align: right; vertical-align: top; font-size: 13px;">
+                <h2 style="margin: 0 0 5px 0; text-transform: uppercase; font-weight: 900; letter-spacing: -0.5px;">Tax Invoice</h2>
+                <div><span class="meta-label">Invoice Ref:</span> <span class="meta-value">#{{ invoice.id }}</span></div>
+                <div><span class="meta-label">Date Generated:</span> <span class="meta-value">{{ invoice.created_at|date:"Y-m-d" }}</span></div>
+            </td>
+        </tr>
+    </table>
     
-    <!-- Mandatory Statutory Legal eTIMS footer panel -->
-    <div class="etims-compliance-section">
-        <div class="etims-data-text">
-            <p><span class="badge">KRA eTIMS COMPLIANT RECEIPT</span></p>
-            <p><strong>Seller PIN:</strong> {{ kra_pin }} | <strong>Branch:</strong> {{ kra_branch }}</p>
-            {% if invoice.etims_status == "TRANSMITTED" %}
-                <p><strong>eTIMS Receipt No:</strong> {{ invoice.etims_receipt_number }}</p>
-                <p style="word-wrap: break-word;"><strong>Device Signature:</strong> {{ invoice.etims_signature }}</p>
-                <p style="word-wrap: break-word;"><strong>Internal Crypt Data:</strong> {{ invoice.etims_internal_data }}</p>
-            {% else %}
-                <p style="color: #c0392b;"><em>Tax processing transmission in background queue. Refresh to print official KRA breakdown.</em></p>
+    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+    
+    <!-- Dynamic Forecourt Delivery Items Loop Placeholder -->
+    <div style="min-height: 150px; padding: 10px 0;">
+        <!-- Your standard billing rows loop goes here -->
+    </div>
+    
+    <!-- Mandatory Statutory Legal eTIMS Compliance Footer -->
+    <div class="etims-compliance-card">
+        <div class="etims-column-left">
+            <div class="etims-badge">KRA eTIMS Compliant Receipt</div>
+            
+            <table class="etims-data-grid">
+                <tr>
+                    <td class="etims-label">Seller PIN:</td>
+                    <td class="etims-value" style="font-weight: bold;">{{ kra_pin }}</td>
+                </tr>
+                <tr>
+                    <td class="etims-label">Station Branch:</td>
+                    <td class="etims-value">{{ kra_branch }}</td>
+                </tr>
+                
+                {% if invoice.etims_status == "TRANSMITTED" %}
+                <tr>
+                    <td class="etims-label">eTIMS Receipt No:</td>
+                    <td class="etims-value" style="font-weight: bold; color: #0A1128;">{{ invoice.etims_receipt_number }}</td>
+                </tr>
+                <tr>
+                    <td class="etims-label">Device Signature:</td>
+                    <td class="etims-value">{{ invoice.etims_signature }}</td>
+                </tr>
+                <tr>
+                    <td class="etims-label">Internal Crypt:</td>
+                    <td class="etims-value">{{ invoice.etims_internal_data }}</td>
+                </tr>
+                {% endif %}
+            </table>
+
+            {% if invoice.etims_status != "TRANSMITTED" %}
+            <div class="queue-alert-box">
+                <p class="queue-message">&bull; Tax transmission active in system background queue. Re-print for statutory KRA clearing profiles.</p>
+            </div>
             {% endif %}
         </div>
         
-        <div class="etims-qr-box">
+        <div class="etims-column-right">
             {% if qr_code_base64 %}
-                <img src="{{ qr_code_base64 }}" alt="KRA Tax Validation Link">
+                <img class="etims-qr-img" src="{{ qr_code_base64 }}" alt="KRA Tax Validation Link Verification Matrix">
+            {% else %}
+                <div style="width: 125px; height: 125px; border: 2px dashed #cbd5e1; background: #fff; border-radius: 8px; margin-left: auto; display: flex; align-items: center; justify-content: center; text-align: center; box-sizing: border-box; padding: 10px;">
+                    <span style="font-size: 9px; font-weight: bold; color: #94a3b8; text-transform: uppercase; tracking: 0.5px;">QR Pending Sync</span>
+                </div>
             {% endif %}
         </div>
     </div>

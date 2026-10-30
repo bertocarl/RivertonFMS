@@ -8,7 +8,7 @@ class Invoice(models.Model):
     total_amount = models.DecimalField(max_digits=12, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     
-    # --- eTIMS Specific Fields ---
+    # --- eTIMS Transmission Tracking ---
     etims_receipt_number = models.CharField(max_length=100, blank=True, null=True, unique=True)
     etims_signature = models.TextField(blank=True, null=True)
     etims_internal_data = models.TextField(blank=True, null=True)
@@ -23,9 +23,24 @@ class Invoice(models.Model):
     )
     etims_error_log = models.TextField(blank=True, null=True)
 
+    # --- Reversal & Credit Note Fields (Now Correctly Inside Invoice) ---
+    is_credit_note = models.BooleanField(default=False)
+    original_invoice = models.ForeignKey(
+        'self', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='credit_notes'
+    )
+    # KRA Statutory Credit Note Reason Codes:
+    # "01": Missing Data, "02": Wrong Invoice Data, "03": Damaged/Returned Goods, "04": Price Adjustment
+    reversal_reason_code = models.CharField(max_length=2, blank=True, null=True)
+
     def __str__(self):
-        return f"Invoice #{self.id}"
+        prefix = "Credit Note" if self.is_credit_note else "Invoice"
+        return f"{prefix} #{self.id}"
     
+
 class ReportRun(models.Model):
     class Kind(models.TextChoices):
         DSSR = "DSSR", "Daily station sales report (DSSR)"
@@ -61,3 +76,4 @@ class ReportRun(models.Model):
 
     def __str__(self):
         return f"{self.get_kind_display()} {self.report_date:%d/%m/%Y}"
+
